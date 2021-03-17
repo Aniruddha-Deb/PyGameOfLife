@@ -34,7 +34,11 @@ def run():
 					loc = Vector2(event.pos)
 					delta = (loc - prevMB)
 					delta.x *= -1
-					camera.pos += delta/camera.scale
+					camera.pos += delta/camera.get_scale()
 					prevMB = loc
 					renderer.render_grid(camera)
 					pygame.display.update()
+			elif event.type == pygame.MOUSEWHEEL:
+				camera.add_to_scale(event.y)
+				renderer.render_grid(camera)
+				pygame.display.update()
