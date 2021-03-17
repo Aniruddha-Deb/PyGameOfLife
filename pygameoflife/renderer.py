@@ -2,6 +2,8 @@ import math
 import pygame
 from pygame import Vector2, Surface
 
+from pygameoflife.game import Game
+
 BG_COLOR = pygame.Color('white')
 GRID_COLOR = pygame.Color('grey80')
 ACTIVE_CELL_COLOR = pygame.Color('grey95')
@@ -27,6 +29,9 @@ class Renderer:
 		while hlpos < h:
 			pygame.draw.line(self.surface, GRID_COLOR, (0,hlpos), (w,hlpos), width=1)
 			hlpos += scale
+	
+	def render_cells(self, camera, game):
+		# TODO implement
 	
 class Camera:
 	

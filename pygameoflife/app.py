@@ -3,6 +3,11 @@ from pygame import Vector2
 
 from pygameoflife.renderer import Renderer, Camera
 
+class App:
+	
+	def __init__(self):
+		
+
 def run():
 	pygame.init()
 	pygame.display.set_caption('PyGameOfLife')
