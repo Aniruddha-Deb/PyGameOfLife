@@ -1,4 +1,4 @@
-from pygameoflife import app
+from pygameoflife.app import App
 
 if __name__ == '__main__':
-	app.run()
+	App().run()

@@ -8,10 +8,15 @@ BG_COLOR = pygame.Color('white')
 GRID_COLOR = pygame.Color('grey80')
 ACTIVE_CELL_COLOR = pygame.Color('grey95')
 
+HDR_HEIGHT = 100
+
 class Renderer:
 	
 	def __init__(self, surface: Surface):
 		self.surface = surface
+		self.min_size = (800, 600)
+		self.size = (800, 600)
+		self.surface_changed = False;
 	
 	def render_grid(self, camera):
 		w, h = self.surface.get_size()
@@ -21,17 +26,17 @@ class Renderer:
 		i = math.ceil(camera.pos.x)
 		vlpos = (i-camera.pos.x)*scale
 		while vlpos < w:
-			pygame.draw.line(self.surface, GRID_COLOR, (vlpos,0), (vlpos,h), width=1)
+			pygame.draw.line(self.surface, GRID_COLOR, (vlpos,HDR_HEIGHT), (vlpos,h), width=1)
 			vlpos += scale
 
 		j = math.floor(camera.pos.y)
-		hlpos = (camera.pos.y-j)*scale
+		hlpos = HDR_HEIGHT + (camera.pos.y-j)*scale
 		while hlpos < h:
 			pygame.draw.line(self.surface, GRID_COLOR, (0,hlpos), (w,hlpos), width=1)
 			hlpos += scale
+
+		self.surface_changed = True
 	
-	def render_cells(self, camera, game):
-		# TODO implement
 	
 class Camera:
 	

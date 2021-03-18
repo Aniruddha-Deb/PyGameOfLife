@@ -18,7 +18,7 @@ class Game:
 		if self.dead_cells[cell] == 0:
 			del self.dead_cells[cell]
 		# update all neighbours
-		for nb in self.get_neighbours(cell)
+		for nb in self.get_neighbours(cell):
 			if nb in self.live_cells:
 				self.live_cells[nb_cell] -= 1
 			elif nb in self.dead_cells:
@@ -36,7 +36,7 @@ class Game:
 			# atleast one neighobur
 
 		# update all neighbours
-		for nb in self.get_neighbours(cell)
+		for nb in self.get_neighbours(cell):
 			if nb in self.live_cells:
 				self.live_cells[nb_cell] += 1
 			elif nb in self.dead_cells:
