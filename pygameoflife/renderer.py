@@ -5,8 +5,8 @@ from pygame import Vector2, Surface
 from pygameoflife.game import Game
 
 BG_COLOR = pygame.Color('white')
-GRID_COLOR = pygame.Color('grey80')
-ACTIVE_CELL_COLOR = pygame.Color('grey95')
+GRID_COLOR = pygame.Color('grey50')
+ACTIVE_CELL_COLOR = pygame.Color('grey5')
 
 HDR_HEIGHT = 100
 
@@ -14,15 +14,14 @@ class Renderer:
 	
 	def __init__(self, surface: Surface):
 		self.surface = surface
-		self.min_size = (800, 600)
-		self.size = (800, 600)
 		self.surface_changed = False;
 	
 	def render_grid(self, camera):
 		w, h = self.surface.get_size()
+			
 		self.surface.fill(BG_COLOR)
 		scale = camera.get_scale()
-		# draw vertical lines
+
 		i = math.ceil(camera.pos.x)
 		vlpos = (i-camera.pos.x)*scale
 		while vlpos < w:
@@ -37,6 +36,41 @@ class Renderer:
 
 		self.surface_changed = True
 	
+	# Convention is that cell (x,y) is the TOP RIGHT cell ie it spans the range
+	# (x->x+1, y->y+1)
+	def render_cells(self, camera, game):
+		w, h = self.surface.get_size()
+		scale = camera.get_scale()
+
+		camx, camy = camera.pos
+		x = math.floor(camx)
+		y = math.floor(camy)
+		nx = math.floor(w/scale + 1)
+		ny = math.floor((h-HDR_HEIGHT)/scale + 1)
+		rx, ry = (0,0)
+		cx, cy = ((x-camx)*scale, HDR_HEIGHT-(y+1-camy)*scale)
+		while rx < nx:
+			while ry > -ny:
+				if game.is_alive((x+rx, y+ry)):
+					# render cell
+					cell_tlx, cell_tly = cx+1, cy+1
+					diff_x, diff_y = (0,0)
+					if cell_tly < HDR_HEIGHT:
+						diff_y = HDR_HEIGHT-cell_tly
+						cell_tly = HDR_HEIGHT
+					pygame.draw.rect(
+						self.surface, 
+						ACTIVE_CELL_COLOR,
+						pygame.Rect(cell_tlx, cell_tly, scale-diff_x-1, scale-diff_y-1)
+					)
+				ry -= 1
+				cy += scale
+			rx += 1
+			cx += scale
+			cy = HDR_HEIGHT-(y+1-camy)*scale
+			ry = 0
+
+		self.surface_changed = True
 	
 class Camera:
 	

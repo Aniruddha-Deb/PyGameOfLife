@@ -2,6 +2,9 @@ import pygame
 from pygame import Vector2
 
 from pygameoflife.renderer import Renderer, Camera
+from pygameoflife.game import Game
+
+MIN_SIZE = (800, 600)
 
 class App:
 	
@@ -9,13 +12,21 @@ class App:
 		pygame.init()
 		pygame.display.set_caption('PyGameOfLife')
 
-		self.win_surf = pygame.display.set_mode((800,600))
+		self.win_surf = pygame.display.set_mode(MIN_SIZE, pygame.RESIZABLE)
 		self.is_running = True
+		
+		self.game = Game()
+		# testing only
+		self.game.activate_cell((3,-3))
+		self.game.activate_cell((-3,-3))
+		self.game.activate_cell((-3,3))
+		self.game.activate_cell((3,3))
 
 		self.renderer = Renderer(self.win_surf)
 		self.camera = Camera(Vector2(0,0), 50)
 
 		self.renderer.render_grid(self.camera)
+		self.renderer.render_cells(self.camera, self.game)
 		pygame.display.update()
 
 		self.dragging = False
@@ -39,13 +50,31 @@ class App:
 			self.camera.pos += delta/self.camera.get_scale()
 			self.prev_mouse_loc = loc
 			self.renderer.render_grid(self.camera)
+			self.renderer.render_cells(self.camera, self.game)
 
 	def handle_mouse_wheel_event(self, evt):
 		self.camera.add_to_scale(evt.y)
 		self.renderer.render_grid(self.camera)
+		self.renderer.render_cells(self.camera, self.game)
 
 	def handle_quit_event(self, evt):
 		self.is_running = False
+	
+	def handle_video_resize_event(self, evt):
+		# video resize events are only fired after resizing is complete, 
+		# so the picture on screen is linearly scaled while the frame is
+		# being resized. This is a known bug, and for now I'll stick
+		# with it because there's no way of changing it in SDL atleast.
+		# bug @ https://github.com/libsdl-org/SDL/issues/1059
+		w, h = evt.size
+		if w < MIN_SIZE[0]:
+			w = MIN_SIZE[0]
+		if h < MIN_SIZE[1]:
+			h = MIN_SIZE[1]
+		self.win_surf = pygame.display.set_mode((w,h), pygame.RESIZABLE)
+		self.renderer.surface = self.win_surf
+		self.renderer.render_grid(self.camera)
+		self.renderer.render_cells(self.camera, self.game)
 
 	def run(self):
 		evt_dict = {
@@ -54,6 +83,7 @@ class App:
 			pygame.MOUSEMOTION: self.handle_mouse_motion_event,
 			pygame.MOUSEWHEEL: self.handle_mouse_wheel_event,
 			pygame.QUIT: self.handle_quit_event,
+			pygame.VIDEORESIZE: self.handle_video_resize_event
 		}
 
 		while self.is_running:

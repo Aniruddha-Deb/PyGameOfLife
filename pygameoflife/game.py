@@ -4,6 +4,9 @@ class Game:
 		self.live_cells = {}
 		self.dead_cells = {}
 	
+	def is_alive(self, cell):
+		return cell in self.live_cells
+
 	def get_neighbours(self, cell):
 		neighbours = []
 		for i in range(cell[0]-1,cell[0]+2):
@@ -20,14 +23,14 @@ class Game:
 		# update all neighbours
 		for nb in self.get_neighbours(cell):
 			if nb in self.live_cells:
-				self.live_cells[nb_cell] -= 1
+				self.live_cells[nb] -= 1
 			elif nb in self.dead_cells:
-				self.dead_cells[nb_cell] -= 1
-				if self.dead_cells[nb_cell] == 0:
-					del self.dead_cells[nb_cell]
+				self.dead_cells[nb] -= 1
+				if self.dead_cells[nb] == 0:
+					del self.dead_cells[nb]
 
 	def activate_cell(self, cell):
-		if cell in self.dead_cells[cell]:
+		if cell in self.dead_cells:
 			self.live_cells[cell] = self.dead_cells[cell]
 			del self.dead_cells[cell]
 		else:
@@ -38,11 +41,11 @@ class Game:
 		# update all neighbours
 		for nb in self.get_neighbours(cell):
 			if nb in self.live_cells:
-				self.live_cells[nb_cell] += 1
+				self.live_cells[nb] += 1
 			elif nb in self.dead_cells:
-				self.dead_cells[nb_cell] += 1
+				self.dead_cells[nb] += 1
 			elif nb not in self.dead_cells:
-				self.dead_cells[nb_cell] = 1
+				self.dead_cells[nb] = 1
 
 	def toggle_cell(self, cell):
 		if cell in self.live_cells:
