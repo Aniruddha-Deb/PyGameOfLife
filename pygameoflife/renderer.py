@@ -45,8 +45,8 @@ class Renderer:
 		camx, camy = camera.pos
 		x = math.floor(camx)
 		y = math.floor(camy)
-		nx = math.floor(w/scale + 1)
-		ny = math.floor((h-HDR_HEIGHT)/scale + 1)
+		nx = math.floor(w/scale + 2)
+		ny = math.floor((h-HDR_HEIGHT)/scale + 2)
 		rx, ry = (0,0)
 		cx, cy = ((x-camx)*scale, HDR_HEIGHT-(y+1-camy)*scale)
 		while rx < nx:

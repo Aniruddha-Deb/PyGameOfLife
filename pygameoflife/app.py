@@ -1,6 +1,8 @@
 import pygame
+import math
 from pygame import Vector2
 
+import pygameoflife.renderer
 from pygameoflife.renderer import Renderer, Camera
 from pygameoflife.game import Game
 
@@ -17,13 +19,14 @@ class App:
 		
 		self.game = Game()
 		# testing only
-		self.game.activate_cell((3,-3))
-		self.game.activate_cell((-3,-3))
-		self.game.activate_cell((-3,3))
-		self.game.activate_cell((3,3))
+		self.game.activate_cell((5,-5))
+		self.game.activate_cell((6,-5))
+		self.game.activate_cell((6,-6))
+		self.game.activate_cell((6,-4))
+		self.game.activate_cell((7,-4))
 
 		self.renderer = Renderer(self.win_surf)
-		self.camera = Camera(Vector2(0,0), 50)
+		self.camera = Camera(Vector2(-9,5), 25)
 
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
@@ -33,24 +36,77 @@ class App:
 		self.shift_pressed = False
 		self.prev_mouse_loc = None
 
-	def handle_mouse_down_event(self, evt):
-		if evt.button == 1:
-			self.dragging = True
-			self.prev_mouse_loc = Vector2(evt.pos)
-						
-	def handle_mouse_up_event(self, evt):
-		if evt.button == 1:
-			self.dragging = False
+	def get_cell_at(self, pos: Vector2):
+		x = pos.x/self.camera.get_scale()
+		y = (pos.y-pygameoflife.renderer.HDR_HEIGHT)/self.camera.get_scale()
 
+		cx = math.floor(self.camera.pos.x+x)
+		cy = math.floor(self.camera.pos.y-y)
+
+		return (cx, cy)
+	
+	def get_cell_at_lazy(self, pos: Vector2):
+		x = pos.x/self.camera.get_scale()
+		y = (pos.y-pygameoflife.renderer.HDR_HEIGHT)/self.camera.get_scale()
+
+		cxf = self.camera.pos.x+x
+		cyf = self.camera.pos.y-y
+		cx = math.floor(cxf)
+		cy = math.floor(cyf)
+
+		if cxf-cx < 0.2:
+			cx -= 1
+		elif cxf-cx > 0.8:
+			cx += 1
+
+		if cyf-cy < 0.2:
+			cy -= 1
+		elif cyf-cy > 0.8:
+			cy += 1
+
+		return (cx, cy)
+			
+	def toggle_cell_at(self, pos: Vector2):
+		self.game.toggle_cell(self.get_cell_at(pos))
+	
+	def activate_cell_at(self, pos: Vector2):
+		cell = self.get_cell_at(pos)
+		if not self.game.is_alive(cell):
+			self.game.activate_cell(cell)
+
+	def deactivate_cell_at(self, pos: Vector2):
+		cell = self.get_cell_at(pos)
+		if self.game.is_alive(cell):
+			self.game.deactivate_cell(cell)
+
+	def handle_mouse_down_event(self, evt):
+		if evt.button == pygame.BUTTON_LEFT:
+			self.prev_mouse_loc = Vector2(evt.pos)
+
+	def handle_mouse_up_event(self, evt):
+		if evt.button == pygame.BUTTON_LEFT:
+			if not self.dragging:
+				# just a click
+				self.toggle_cell_at(self.prev_mouse_loc)
+				self.renderer.render_grid(self.camera)
+				self.renderer.render_cells(self.camera, self.game)
+			self.dragging = False
+		
 	def handle_mouse_motion_event(self, evt):
-		if self.dragging:
-			loc = Vector2(evt.pos)
-			delta = (loc - self.prev_mouse_loc)
-			delta.x *= -1
-			self.camera.pos += delta/self.camera.get_scale()
-			self.prev_mouse_loc = loc
+		if evt.buttons[0]:
+			self.dragging = True
+			curr_pos = Vector2(evt.pos)
+			if pygame.key.get_pressed()[pygame.K_LSHIFT] or pygame.key.get_pressed()[pygame.K_RSHIFT]:
+				self.activate_cell_at(curr_pos)
+			elif pygame.key.get_pressed()[pygame.K_LCTRL] or pygame.key.get_pressed()[pygame.K_RCTRL]:
+				self.deactivate_cell_at(curr_pos)
+			else:
+				delta = Vector2(curr_pos - self.prev_mouse_loc)
+				delta.x *= -1
+				self.camera.pos += delta/self.camera.get_scale()
 			self.renderer.render_grid(self.camera)
 			self.renderer.render_cells(self.camera, self.game)
+			self.prev_mouse_loc = curr_pos
 
 	def handle_mouse_wheel_event(self, evt):
 		self.camera.add_to_scale(evt.y)
@@ -86,10 +142,18 @@ class App:
 			pygame.VIDEORESIZE: self.handle_video_resize_event
 		}
 
+		time = 0
 		while self.is_running:
 			evts = [e for e in pygame.event.get() if e.type in evt_dict]
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
+
+			time = pygame.time.get_ticks()
+			if (time%500 < 2):
+				print("updating time")
+				self.game.update()
+				self.renderer.render_grid(self.camera)
+				self.renderer.render_cells(self.camera, self.game)
 
 			if self.renderer.surface_changed:
 				pygame.display.update()
