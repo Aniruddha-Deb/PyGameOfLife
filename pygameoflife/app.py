@@ -1,4 +1,5 @@
 import pygame
+import pygame_gui
 import math
 from pygame import Vector2
 
@@ -7,6 +8,7 @@ from pygameoflife.renderer import Renderer, Camera
 from pygameoflife.game import Game
 
 MIN_SIZE = (800, 600)
+FRAMERATE = 60
 
 class App:
 	
@@ -16,6 +18,7 @@ class App:
 
 		self.win_surf = pygame.display.set_mode(MIN_SIZE, pygame.RESIZABLE)
 		self.is_running = True
+		self.game_paused = True
 		
 		self.game = Game()
 		# testing only
@@ -85,7 +88,7 @@ class App:
 
 	def handle_mouse_up_event(self, evt):
 		if evt.button == pygame.BUTTON_LEFT:
-			if not self.dragging:
+			if not self.dragging and evt.pos[1] > pygameoflife.renderer.HDR_HEIGHT:
 				# just a click
 				self.toggle_cell_at(self.prev_mouse_loc)
 				self.renderer.render_grid(self.camera)
@@ -131,6 +134,10 @@ class App:
 		self.renderer.surface = self.win_surf
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
+	
+	def handle_ui_event(self, evt):
+		if evt.user_type == pygame_gui.UI_BUTTON_PRESSED:
+			self.game_paused = not self.game_paused
 
 	def run(self):
 		evt_dict = {
@@ -139,21 +146,33 @@ class App:
 			pygame.MOUSEMOTION: self.handle_mouse_motion_event,
 			pygame.MOUSEWHEEL: self.handle_mouse_wheel_event,
 			pygame.QUIT: self.handle_quit_event,
-			pygame.VIDEORESIZE: self.handle_video_resize_event
+			pygame.VIDEORESIZE: self.handle_video_resize_event,
+			pygame.USEREVENT: self.handle_ui_event
 		}
 
-		time = 0
+		manager = pygame_gui.UIManager(MIN_SIZE)
+
+		clock = pygame.time.Clock()
+		nticks = 0
+		hello_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 25), (100, 50)),
+                                             text='Play/Pause',
+                                             manager=manager)
 		while self.is_running:
+			time_elapsed = clock.tick(FRAMERATE)
+			nticks += 1
 			evts = [e for e in pygame.event.get() if e.type in evt_dict]
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
+				manager.process_events(evt)
 
-			time = pygame.time.get_ticks()
-			if (time%500 < 2):
-				print("updating time")
+			nticks %= FRAMERATE/2
+			if nticks == 0 and not self.game_paused:
 				self.game.update()
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
+
+			manager.update(time_elapsed)
+			manager.draw_ui(self.win_surf)
 
 			if self.renderer.surface_changed:
 				pygame.display.update()

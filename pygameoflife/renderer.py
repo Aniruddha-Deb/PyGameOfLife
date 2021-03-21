@@ -5,8 +5,8 @@ from pygame import Vector2, Surface
 from pygameoflife.game import Game
 
 BG_COLOR = pygame.Color('white')
-GRID_COLOR = pygame.Color('grey50')
-ACTIVE_CELL_COLOR = pygame.Color('grey5')
+GRID_COLOR = pygame.Color('#c6c6c6')
+ACTIVE_CELL_COLOR = pygame.Color('black')
 
 HDR_HEIGHT = 100
 
