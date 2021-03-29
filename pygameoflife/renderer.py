@@ -1,6 +1,8 @@
 import math
 import pygame
+import pygame_gui
 from pygame import Vector2, Surface
+from pygame_gui import UIManager
 
 from pygameoflife.game import Game
 
@@ -8,12 +10,49 @@ BG_COLOR = pygame.Color('white')
 GRID_COLOR = pygame.Color('#c6c6c6')
 ACTIVE_CELL_COLOR = pygame.Color('black')
 
+BTN_HEIGHT = 50
 HDR_HEIGHT = 100
 
-class GameRenderer(Renderer):
+class MenuBar(UIManager):
+	
+	def __init__(self, bg: Surface):
+		super().__init__((800,600))
+		self.bg = bg
+		self.create_components()
+	
+	def create_components(self):
+		cx, cy = Vector2(self.bg.get_size())/2
+		self.pp_btn = pygame_gui.elements.UIButton(
+				relative_rect=pygame.Rect((cx-100,25),(100, 50)),
+                text='Play/Pause',
+                manager=self)
+		self.clear_btn = pygame_gui.elements.UIButton(
+				relative_rect=pygame.Rect((cx+5, 25), (80, 50)),
+                text='Clear',
+                manager=self)
+		self.speed_reduce_btn = pygame_gui.elements.UIButton(
+				relative_rect=pygame.Rect((700,30),(40,40)),
+				text='-',
+				manager=self)
+	
+	def update_on_resize(self):
+		w,h = self.bg.get_size()
+		self.window_resolution = (w,h) 
+		self.pp_btn.set_position((w/2-100,25))
+		self.clear_btn.set_position((w/2+5,25))
+		self.speed_reduce_btn.set_position((w-100,30))
+		print(self.window_resolution)
+
+	def render(self):
+		w = self.bg.get_size()[0]
+		pygame.draw.rect(self.bg, BG_COLOR, pygame.Rect(0,0,w,HDR_HEIGHT))
+		super().draw_ui(self.bg)
+
+class Renderer():
 	
 	def __init__(self, surface: Surface):
 		self.surface = surface
+		self.surface.fill(BG_COLOR)
 		self.surface_changed = False;
 	
 	def render_grid(self, camera):

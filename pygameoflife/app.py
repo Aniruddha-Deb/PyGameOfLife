@@ -4,7 +4,7 @@ import math
 from pygame import Vector2
 
 import pygameoflife.renderer
-from pygameoflife.renderer import Renderer, Camera
+from pygameoflife.renderer import MenuBar, Renderer, Camera
 from pygameoflife.game import Game
 
 MIN_SIZE = (800, 600)
@@ -30,6 +30,7 @@ class App:
 
 		self.renderer = Renderer(self.win_surf)
 		self.camera = Camera(Vector2(-9,5), 25)
+		self.menubar = MenuBar(self.win_surf)
 
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
@@ -132,6 +133,8 @@ class App:
 			h = MIN_SIZE[1]
 		self.win_surf = pygame.display.set_mode((w,h), pygame.RESIZABLE)
 		self.renderer.surface = self.win_surf
+		self.menubar.bg = self.win_surf
+		self.menubar.update_on_resize()
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
 	
@@ -150,20 +153,16 @@ class App:
 			pygame.USEREVENT: self.handle_ui_event
 		}
 
-		manager = pygame_gui.UIManager(MIN_SIZE)
-
 		clock = pygame.time.Clock()
 		nticks = 0
-		hello_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((350, 25), (100, 50)),
-                                             text='Play/Pause',
-                                             manager=manager)
+
 		while self.is_running:
 			time_elapsed = clock.tick(FRAMERATE)
 			nticks += 1
 			evts = [e for e in pygame.event.get() if e.type in evt_dict]
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
-				manager.process_events(evt)
+				self.menubar.process_events(evt)
 
 			nticks %= FRAMERATE/2
 			if nticks == 0 and not self.game_paused:
@@ -171,8 +170,8 @@ class App:
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
 
-			manager.update(time_elapsed)
-			manager.draw_ui(self.win_surf)
+			self.menubar.update(time_elapsed)
+			self.menubar.render()
 			pygame.display.update()
 
 			if self.renderer.surface_changed:
