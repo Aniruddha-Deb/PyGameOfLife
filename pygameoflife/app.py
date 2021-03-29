@@ -173,7 +173,7 @@ class App:
 
 			manager.update(time_elapsed)
 			manager.draw_ui(self.win_surf)
+			pygame.display.update()
 
 			if self.renderer.surface_changed:
-				pygame.display.update()
 				self.renderer.surface_changed = False

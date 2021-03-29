@@ -10,7 +10,7 @@ ACTIVE_CELL_COLOR = pygame.Color('black')
 
 HDR_HEIGHT = 100
 
-class Renderer:
+class GameRenderer(Renderer):
 	
 	def __init__(self, surface: Surface):
 		self.surface = surface
@@ -19,7 +19,8 @@ class Renderer:
 	def render_grid(self, camera):
 		w, h = self.surface.get_size()
 			
-		self.surface.fill(BG_COLOR)
+		pygame.draw.rect(self.surface, BG_COLOR, 
+			pygame.Rect(0,HDR_HEIGHT,w,h-HDR_HEIGHT) )
 		scale = camera.get_scale()
 
 		i = math.ceil(camera.pos.x)

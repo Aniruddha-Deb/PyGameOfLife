@@ -1,0 +1,16 @@
+App
+  - View
+	-* Component
+	  - Position
+	  - Render instructions
+	- Renderer
+  - Game
+    - Stores game state
+  - Controller
+    - Contains event handling code, and manipulates Game
+
+Event Loop:
+ - Controller handles events
+ - Controller updates game
+ - View gets updated as a result of game
+ - View reloads
