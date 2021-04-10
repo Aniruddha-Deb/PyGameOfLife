@@ -14,6 +14,9 @@ class App:
 	
 	def __init__(self):
 		pygame.init()
+		print("Init pygame")
+		pygame.font.init()
+		print("Init pygame font")
 		pygame.display.set_caption('PyGameOfLife')
 
 		self.win_surf = pygame.display.set_mode(MIN_SIZE, pygame.RESIZABLE)
@@ -30,10 +33,13 @@ class App:
 
 		self.renderer = Renderer(self.win_surf)
 		self.camera = Camera(Vector2(-9,5), 25)
-		self.menubar = MenuBar(self.win_surf)
+		print("Made everything else")
+		self.menubar = MenuBar()
+		print("Made menubar")
 
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
+		self.renderer.render_menubar(self.menubar)
 		pygame.display.update()
 
 		self.dragging = False
@@ -91,9 +97,13 @@ class App:
 		if evt.button == pygame.BUTTON_LEFT:
 			if not self.dragging and evt.pos[1] > pygameoflife.renderer.HDR_HEIGHT:
 				# just a click
+				print("Click in game")
 				self.toggle_cell_at(self.prev_mouse_loc)
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
+			else:
+				print("Click in header")
+				# click in header; check for button clicks
 			self.dragging = False
 		
 	def handle_mouse_motion_event(self, evt):
@@ -133,15 +143,10 @@ class App:
 			h = MIN_SIZE[1]
 		self.win_surf = pygame.display.set_mode((w,h), pygame.RESIZABLE)
 		self.renderer.surface = self.win_surf
-		self.menubar.bg = self.win_surf
-		self.menubar.update_on_resize()
 		self.renderer.render_grid(self.camera)
+		self.renderer.render_menubar(self.menubar)
 		self.renderer.render_cells(self.camera, self.game)
 	
-	def handle_ui_event(self, evt):
-		if evt.user_type == pygame_gui.UI_BUTTON_PRESSED:
-			self.game_paused = not self.game_paused
-
 	def run(self):
 		evt_dict = {
 			pygame.MOUSEBUTTONDOWN: self.handle_mouse_down_event,
@@ -150,7 +155,6 @@ class App:
 			pygame.MOUSEWHEEL: self.handle_mouse_wheel_event,
 			pygame.QUIT: self.handle_quit_event,
 			pygame.VIDEORESIZE: self.handle_video_resize_event,
-			pygame.USEREVENT: self.handle_ui_event
 		}
 
 		clock = pygame.time.Clock()
@@ -162,7 +166,6 @@ class App:
 			evts = [e for e in pygame.event.get() if e.type in evt_dict]
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
-				self.menubar.process_events(evt)
 
 			nticks %= FRAMERATE/2
 			if nticks == 0 and not self.game_paused:
@@ -170,9 +173,6 @@ class App:
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
 
-			self.menubar.update(time_elapsed)
-			self.menubar.render()
-			pygame.display.update()
-
 			if self.renderer.surface_changed:
 				self.renderer.surface_changed = False
+				pygame.display.update()

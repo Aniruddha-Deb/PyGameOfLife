@@ -3,6 +3,7 @@ class Game:
 	def __init__(self):
 		self.live_cells = {}
 		self.dead_cells = {}
+		self.gen = 0
 	
 	def is_alive(self, cell):
 		return cell in self.live_cells
@@ -67,3 +68,4 @@ class Game:
 		for cell in old_dead_cells:
 			if old_dead_cells[cell] == 3:
 				self.activate_cell(cell)
+		self.gen += 1

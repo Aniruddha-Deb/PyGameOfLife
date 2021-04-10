@@ -7,46 +7,66 @@ from pygame_gui import UIManager
 from pygameoflife.game import Game
 
 BG_COLOR = pygame.Color('white')
+BUTTON_COLOR = pygame.Color('#aaabab')
 GRID_COLOR = pygame.Color('#c6c6c6')
 ACTIVE_CELL_COLOR = pygame.Color('black')
 
 BTN_HEIGHT = 50
 HDR_HEIGHT = 100
 
-class MenuBar(UIManager):
+class Button():
 	
-	def __init__(self, bg: Surface):
-		super().__init__((800,600))
-		self.bg = bg
-		self.create_components()
+	def __init__(self, text: str, pos: pygame.Rect, color: pygame.Color, rel: int):
+		self.FONT = pygame.font.SysFont('Menlo', 20)
+		self.text = text
+		self.pos = pos
+		self.color = color
+		self.rel = rel
 	
-	def create_components(self):
-		cx, cy = Vector2(self.bg.get_size())/2
-		self.pp_btn = pygame_gui.elements.UIButton(
-				relative_rect=pygame.Rect((cx-100,25),(100, 50)),
-                text='Play/Pause',
-                manager=self)
-		self.clear_btn = pygame_gui.elements.UIButton(
-				relative_rect=pygame.Rect((cx+5, 25), (80, 50)),
-                text='Clear',
-                manager=self)
-		self.speed_reduce_btn = pygame_gui.elements.UIButton(
-				relative_rect=pygame.Rect((700,30),(40,40)),
-				text='-',
-				manager=self)
-	
-	def update_on_resize(self):
-		w,h = self.bg.get_size()
-		self.window_resolution = (w,h) 
-		self.pp_btn.set_position((w/2-100,25))
-		self.clear_btn.set_position((w/2+5,25))
-		self.speed_reduce_btn.set_position((w-100,30))
-		print(self.window_resolution)
+	def render(self, surf: Surface):
+		text_surf = self.FONT.render(self.text, True, ACTIVE_CELL_COLOR)
+		w, h = surf.get_size()
+		x = self.pos.x
+		y = self.pos.y
+		if self.rel == 0:
+			# (centre,centre) relative
+			x = w/2+self.pos.x
+			y = h/2+self.pos.y
+		elif self.rel == 1:
+			# (right,centre) relative
+			x = w+self.pos.x
+			y = h/2+self.pos.y
+		pygame.draw.rect(surf, self.color, pygame.Rect(x, y, self.pos.w, self.pos.h))
+		surf.blit(text_surf, (x, y))
 
-	def render(self):
-		w = self.bg.get_size()[0]
-		pygame.draw.rect(self.bg, BG_COLOR, pygame.Rect(0,0,w,HDR_HEIGHT))
-		super().draw_ui(self.bg)
+class MenuBar():
+	
+	def __init__(self):
+		self.FONT = pygame.font.SysFont('Menlo', 20)
+		self.buttons = [
+			Button("Play/Pause", pygame.Rect(-105,-25,100,50), BUTTON_COLOR, 0),
+			Button("Clear", pygame.Rect(5,-25,100,50), BUTTON_COLOR, 0),
+			Button("-", pygame.Rect(-50,-20,40,40), BUTTON_COLOR, 1),
+			Button("+", pygame.Rect(-20,-20,40,40), BUTTON_COLOR, 1)
+		]
+		self.gen = 0
+		self.pop = 0
+		
+	def update(self, game: Game):
+		self.gen = game.gen
+		self.pop = len(game.live_cells)
+
+	def render(self, surf: Surface):
+		w, h = surf.get_size()
+		surf.fill(BG_COLOR)
+		for button in self.buttons:
+			button.render(surf)
+
+		gen_text = self.FONT.render(f"Generation: {self.gen}", True, ACTIVE_CELL_COLOR)
+		pop_text = self.FONT.render(f"Population: {self.pop}", True, ACTIVE_CELL_COLOR)
+
+		surf.blit(gen_text, (20,20))
+		surf.blit(pop_text, (20,50))
 
 class Renderer():
 	
@@ -55,6 +75,16 @@ class Renderer():
 		self.surface.fill(BG_COLOR)
 		self.surface_changed = False;
 	
+	def render_menubar(self, menubar: MenuBar):
+		w, h = self.surface.get_size()
+
+		surf = pygame.Surface((w,HDR_HEIGHT))
+
+		menubar.render(surf)
+		self.surface.blit(surf, (0,0))
+
+		self.surface_changed = True
+
 	def render_grid(self, camera):
 		w, h = self.surface.get_size()
 			
