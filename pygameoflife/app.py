@@ -100,6 +100,18 @@ class App:
 		self.renderer.render_menubar(self.menubar)
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
+	
+	def inc_freq(self):
+		if self.game.freq < 32:
+			self.game.freq = self.game.freq * 2
+		self.menubar.update(self.game)
+		self.renderer.render_menubar(self.menubar)
+	
+	def dec_freq(self):
+		if self.game.freq > 1:
+			self.game.freq = int(self.game.freq / 2)
+		self.menubar.update(self.game)
+		self.renderer.render_menubar(self.menubar)
 
 	def handle_mouse_down_event(self, evt):
 		if evt.button == pygame.BUTTON_LEFT:
@@ -200,7 +212,7 @@ class App:
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
 
-			nticks %= FRAMERATE/2
+			nticks %= FRAMERATE/self.game.freq
 			if nticks == 0 and not self.game_paused:
 				self.game.update()
 				self.menubar.update(self.game)

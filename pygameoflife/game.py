@@ -4,6 +4,7 @@ class Game:
 		self.live_cells = {}
 		self.dead_cells = {}
 		self.gen = 0
+		self.freq = 2
 	
 	def is_alive(self, cell):
 		return cell in self.live_cells

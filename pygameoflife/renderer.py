@@ -70,15 +70,17 @@ class MenuBar():
 		self.buttons = [
 			Button("Play/Pause", pygame.Rect(-105,-20,100,40), BUTTON_COLOR, 0, func=app.play_pause),
 			Button("Reset", pygame.Rect(5,-20,100,40), BUTTON_COLOR, 0, func=app.reset),
-			Button("-", pygame.Rect(-120,-15,30,30), BUTTON_COLOR, 1),
-			Button("+", pygame.Rect(-40,-15,30,30), BUTTON_COLOR, 1)
+			Button("-", pygame.Rect(-120,-15,30,30), BUTTON_COLOR, 1, func=app.dec_freq),
+			Button("+", pygame.Rect(-40,-15,30,30), BUTTON_COLOR, 1, func=app.inc_freq)
 		]
 		self.gen = 0
 		self.pop = 0
+		self.freq = 0
 		
 	def update(self, game: Game):
 		self.gen = game.gen
 		self.pop = len(game.live_cells)
+		self.freq = game.freq
 
 	def render(self, surf: Surface):
 		w, h = surf.get_size()
@@ -88,9 +90,11 @@ class MenuBar():
 
 		gen_text = FONT.render(f"Generation: {self.gen}", True, ACTIVE_CELL_COLOR)
 		pop_text = FONT.render(f"Population: {self.pop}", True, ACTIVE_CELL_COLOR)
+		freq = FONT.render(f"{self.freq}Hz", True, ACTIVE_CELL_COLOR)
 
 		surf.blit(gen_text, (20,20))
 		surf.blit(pop_text, (20,50))
+		surf.blit(freq, (w-80,h/2-10))
 
 class Renderer():
 	
