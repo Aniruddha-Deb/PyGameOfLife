@@ -10,21 +10,35 @@ BG_COLOR = pygame.Color('white')
 BUTTON_COLOR = pygame.Color('#aaabab')
 GRID_COLOR = pygame.Color('#c6c6c6')
 ACTIVE_CELL_COLOR = pygame.Color('black')
+ACTIVE_BTN_COLOR = pygame.Color('#989898')
+BTN_CLICK_COLOR = pygame.Color('#767676')
 
 BTN_HEIGHT = 50
 HDR_HEIGHT = 100
 
+FONT = None
+
 class Button():
 	
-	def __init__(self, text: str, pos: pygame.Rect, color: pygame.Color, rel: int):
-		self.FONT = pygame.font.SysFont('Menlo', 20)
+	def __init__(self, text: str, pos: pygame.Rect, color: pygame.Color, rel: int, func=None):
 		self.text = text
 		self.pos = pos
 		self.color = color
 		self.rel = rel
+		self.func = func
 	
 	def render(self, surf: Surface):
-		text_surf = self.FONT.render(self.text, True, ACTIVE_CELL_COLOR)
+		self.surface = surf
+		text_surf = FONT.render(self.text, True, ACTIVE_CELL_COLOR)
+		w, h = surf.get_size()
+		loc = self.get_abs_rect(surf)
+		x = loc.x
+		y = loc.y
+		tw, th = text_surf.get_size()
+		pygame.draw.rect(surf, self.color, loc)
+		surf.blit(text_surf, (x+self.pos.w/2-tw/2, y+self.pos.h/2-th/2))
+	
+	def get_abs_rect(self, surf: Surface):
 		w, h = surf.get_size()
 		x = self.pos.x
 		y = self.pos.y
@@ -36,18 +50,28 @@ class Button():
 			# (right,centre) relative
 			x = w+self.pos.x
 			y = h/2+self.pos.y
-		pygame.draw.rect(surf, self.color, pygame.Rect(x, y, self.pos.w, self.pos.h))
-		surf.blit(text_surf, (x, y))
+		return pygame.Rect(x, y, self.pos.w, self.pos.h)
+	
+	def has_coord(self, coord):
+		rect = self.get_abs_rect(self.surface)
+		return rect.x < coord.x < rect.x + rect.w and rect.y < coord.y < rect.y + rect.h
+	
+	def onclick(self):
+		if self.func:
+			self.func()
 
 class MenuBar():
 	
-	def __init__(self):
-		self.FONT = pygame.font.SysFont('Menlo', 20)
+	def __init__(self, app):
+		print("Making font")
+		global FONT
+		FONT = pygame.font.Font('pygameoflife/res/font.ttf', 16)
+		print("Made font")
 		self.buttons = [
-			Button("Play/Pause", pygame.Rect(-105,-25,100,50), BUTTON_COLOR, 0),
-			Button("Clear", pygame.Rect(5,-25,100,50), BUTTON_COLOR, 0),
-			Button("-", pygame.Rect(-50,-20,40,40), BUTTON_COLOR, 1),
-			Button("+", pygame.Rect(-20,-20,40,40), BUTTON_COLOR, 1)
+			Button("Play/Pause", pygame.Rect(-105,-20,100,40), BUTTON_COLOR, 0, func=app.play_pause),
+			Button("Reset", pygame.Rect(5,-20,100,40), BUTTON_COLOR, 0, func=app.reset),
+			Button("-", pygame.Rect(-120,-15,30,30), BUTTON_COLOR, 1),
+			Button("+", pygame.Rect(-40,-15,30,30), BUTTON_COLOR, 1)
 		]
 		self.gen = 0
 		self.pop = 0
@@ -58,12 +82,12 @@ class MenuBar():
 
 	def render(self, surf: Surface):
 		w, h = surf.get_size()
-		surf.fill(BG_COLOR)
+		surf.fill(pygame.Color('#eeeeee'))
 		for button in self.buttons:
 			button.render(surf)
 
-		gen_text = self.FONT.render(f"Generation: {self.gen}", True, ACTIVE_CELL_COLOR)
-		pop_text = self.FONT.render(f"Population: {self.pop}", True, ACTIVE_CELL_COLOR)
+		gen_text = FONT.render(f"Generation: {self.gen}", True, ACTIVE_CELL_COLOR)
+		pop_text = FONT.render(f"Population: {self.pop}", True, ACTIVE_CELL_COLOR)
 
 		surf.blit(gen_text, (20,20))
 		surf.blit(pop_text, (20,50))

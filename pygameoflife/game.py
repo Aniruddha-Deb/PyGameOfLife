@@ -8,6 +8,11 @@ class Game:
 	def is_alive(self, cell):
 		return cell in self.live_cells
 
+	def reset(self):
+		self.live_cells = {}
+		self.dead_cells = {}
+		self.gen = 0
+
 	def get_neighbours(self, cell):
 		neighbours = []
 		for i in range(cell[0]-1,cell[0]+2):

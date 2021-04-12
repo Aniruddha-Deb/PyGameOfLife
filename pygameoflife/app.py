@@ -34,8 +34,9 @@ class App:
 		self.renderer = Renderer(self.win_surf)
 		self.camera = Camera(Vector2(-9,5), 25)
 		print("Made everything else")
-		self.menubar = MenuBar()
+		self.menubar = MenuBar(self)
 		print("Made menubar")
+		self.menubar.update(self.game)
 
 		self.renderer.render_grid(self.camera)
 		self.renderer.render_cells(self.camera, self.game)
@@ -44,6 +45,7 @@ class App:
 
 		self.dragging = False
 		self.shift_pressed = False
+		self.btn_active = None
 		self.prev_mouse_loc = None
 
 	def get_cell_at(self, pos: Vector2):
@@ -88,39 +90,70 @@ class App:
 		cell = self.get_cell_at(pos)
 		if self.game.is_alive(cell):
 			self.game.deactivate_cell(cell)
+	
+	def play_pause(self):
+		self.game_paused = not self.game_paused 
+	
+	def reset(self):
+		self.game.reset()
+		self.menubar.update(self.game)
+		self.renderer.render_menubar(self.menubar)
+		self.renderer.render_grid(self.camera)
+		self.renderer.render_cells(self.camera, self.game)
 
 	def handle_mouse_down_event(self, evt):
 		if evt.button == pygame.BUTTON_LEFT:
 			self.prev_mouse_loc = Vector2(evt.pos)
+			self.drag_start_loc = Vector2(evt.pos)
+			if self.btn_active:
+				self.btn_active.color = pygameoflife.renderer.BTN_CLICK_COLOR
+				self.renderer.render_menubar(self.menubar)
+				self.btn_active.onclick()
 
 	def handle_mouse_up_event(self, evt):
 		if evt.button == pygame.BUTTON_LEFT:
 			if not self.dragging and evt.pos[1] > pygameoflife.renderer.HDR_HEIGHT:
 				# just a click
-				print("Click in game")
 				self.toggle_cell_at(self.prev_mouse_loc)
+				self.menubar.update(self.game)
+				self.renderer.render_menubar(self.menubar)
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
-			else:
-				print("Click in header")
-				# click in header; check for button clicks
+			elif self.btn_active:
+				self.btn_active.color = pygameoflife.renderer.ACTIVE_BTN_COLOR
+				self.renderer.render_menubar(self.menubar)
 			self.dragging = False
 		
 	def handle_mouse_motion_event(self, evt):
+		curr_pos = Vector2(evt.pos)
 		if evt.buttons[0]:
-			self.dragging = True
-			curr_pos = Vector2(evt.pos)
+			if (self.drag_start_loc - curr_pos).length() > 5:
+				self.dragging = True
+
 			if pygame.key.get_pressed()[pygame.K_LSHIFT] or pygame.key.get_pressed()[pygame.K_RSHIFT]:
 				self.activate_cell_at(curr_pos)
 			elif pygame.key.get_pressed()[pygame.K_LCTRL] or pygame.key.get_pressed()[pygame.K_RCTRL]:
 				self.deactivate_cell_at(curr_pos)
-			else:
+			elif self.dragging:
 				delta = Vector2(curr_pos - self.prev_mouse_loc)
 				delta.x *= -1
 				self.camera.pos += delta/self.camera.get_scale()
+			self.menubar.update(self.game)
+			self.renderer.render_menubar(self.menubar)
 			self.renderer.render_grid(self.camera)
 			self.renderer.render_cells(self.camera, self.game)
 			self.prev_mouse_loc = curr_pos
+		elif curr_pos.y < pygameoflife.renderer.HDR_HEIGHT and not self.btn_active:
+			for button in self.menubar.buttons:
+				if button.has_coord(curr_pos):
+					button.color = pygameoflife.renderer.ACTIVE_BTN_COLOR
+					self.renderer.render_menubar(self.menubar)
+					self.btn_active = button
+					break
+		elif self.btn_active and not self.btn_active.has_coord(curr_pos):
+			self.btn_active.color = pygameoflife.renderer.BUTTON_COLOR
+			self.renderer.render_menubar(self.menubar)
+			self.btn_active = None
 
 	def handle_mouse_wheel_event(self, evt):
 		self.camera.add_to_scale(evt.y)
@@ -170,6 +203,8 @@ class App:
 			nticks %= FRAMERATE/2
 			if nticks == 0 and not self.game_paused:
 				self.game.update()
+				self.menubar.update(self.game)
+				self.renderer.render_menubar(self.menubar)
 				self.renderer.render_grid(self.camera)
 				self.renderer.render_cells(self.camera, self.game)
 
