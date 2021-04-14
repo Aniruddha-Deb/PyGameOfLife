@@ -57,27 +57,6 @@ class App:
 
 		return (cx, cy)
 	
-	def get_cell_at_lazy(self, pos: Vector2):
-		x = pos.x/self.camera.get_scale()
-		y = (pos.y-pygameoflife.renderer.HDR_HEIGHT)/self.camera.get_scale()
-
-		cxf = self.camera.pos.x+x
-		cyf = self.camera.pos.y-y
-		cx = math.floor(cxf)
-		cy = math.floor(cyf)
-
-		if cxf-cx < 0.2:
-			cx -= 1
-		elif cxf-cx > 0.8:
-			cx += 1
-
-		if cyf-cy < 0.2:
-			cy -= 1
-		elif cyf-cy > 0.8:
-			cy += 1
-
-		return (cx, cy)
-			
 	def toggle_cell_at(self, pos: Vector2):
 		self.game.toggle_cell(self.get_cell_at(pos))
 	
@@ -212,7 +191,7 @@ class App:
 			for evt in evts:
 				evt_dict[evt.type](evt) # run method corresponsing to event
 
-			nticks %= FRAMERATE/self.game.freq
+			nticks %= int(FRAMERATE/self.game.freq)
 			if nticks == 0 and not self.game_paused:
 				self.game.update()
 				self.menubar.update(self.game)

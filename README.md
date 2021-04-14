@@ -14,6 +14,9 @@ cd PyGameOfLife
 pip install -r requirements.txt
 ```
 
+**Looking for people who can bundle PyGameOfLife into installables**. If you're
+up for it, please let me know :)
+
 ## Usage
 
 ```
